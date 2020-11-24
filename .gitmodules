@@ -1,0 +1,3 @@
+[submodule "references/osmnx-examples"]
+	path = references/osmnx-examples
+	url = https://github.com/gboeing/osmnx-examples

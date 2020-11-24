@@ -1,6 +1,7 @@
 .data/
 .vscode
 .vscode/
+.my
 
 # Distribution / packaging
 .Python

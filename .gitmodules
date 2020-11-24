@@ -1,3 +1,9 @@
 [submodule "references/osmnx-examples"]
 	path = references/osmnx-examples
 	url = https://github.com/gboeing/osmnx-examples
+[submodule "references/incheon_network"]
+	path = references/incheon_network
+	url = https://github.com/J-Jae/drone-network
+[submodule "references/postman_problems"]
+	path = references/postman_problems
+	url = https://github.com/brooksandrew/postman_problems

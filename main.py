@@ -1,51 +1,39 @@
-import osmnx as ox
+import geopandas as gpd
 import networkx as nx
-import osmnxUtils
-
-# get some bbox
-bbox = ox.utils_geo.bbox_from_point((45.518698, -122.679964), dist=300)
-north, south, east, west = bbox
-G = ox.graph_from_bbox(north, south, east, west, network_type='drive', clean_periphery=False)
-fig, ax = ox.plot_graph(G, node_color='r')
-
-# the node degree distribution for this graph has many false cul-de-sacs
-k = dict(G.degree())
-{n:list(k.values()).count(n) for n in range(max(k.values()) + 1)}
-G = ox.graph_from_bbox(north, south, east, west, network_type='drive')
-fig, ax = ox.plot_graph(G, node_color='r')
+import numpy as np
 
 district_name = 'simple'
-osmnxUtils.get_data(G, district_name)
+
+shp_node_path = f'./data/{district_name}_shape/nodes.shp'
+shp_edge_path = f'./data/{district_name}_shape/edges.shp'
+
+nodes = gpd.read_file(shp_node_path)
+edges = gpd.read_file(shp_edge_path)
+# edges = gpd.read_file(shp_edge_path, encoding='euc-kr')
+# edges = gpd.read_file(shp_edge_path, encoding='euc-kr')
+
+# shp_node = shp_node[shp_node['NODE_ID'].str[0:3] == '161']
+# shp_link = shp_link[shp_link['LINK_ID'].str[0:3] == '161']
+
+# Change column name to draw network in Gephi
+# shp_node.rename(columns={'NODE_ID': 'Id'}, inplace=True)
+# shp_link.rename(columns={'F_NODE': 'Source', 'T_NODE': 'Target'}, inplace=True)
 
 
+print(nodes.head())
+print(edges.head())
 
-"""
-# ex_1 : SAN FRANCISCO
-district_name = 'San_Francisco'
-ox.config(all_oneway=True)
-G = ox.graph_from_bbox(37.79, 37.78, -122.41, -122.43, network_type='drive')
+g = nx.Graph()
 
-# osmnxUtils.get_data(G, district_name)
-G_proj = ox.project_graph(G)
-fig, ax = ox.plot_graph(G_proj) 
+for idx, row in nodes.iterrows():
+    # add node to Graph G
+    g.add_node(row['osmid'], Label=row['osmid'],
+               latitude=row['y'], longitude=row['x'])
 
-# ex_2 : wurster_hall
-district_name = 'Wurster_Hall'
-wurster_hall = (37.870605, -122.254830)
-one_mile = 1609 #meters  alt : 500 meters
-G = ox.graph_from_point(wurster_hall, dist=one_mile, network_type='drive')
+for idx, row in edges.iterrows():
+    g.add_edge(row['from'], row['to'], weight=row['length'])
 
-# osmnxUtils.get_data(G, district_name)
-fig, ax = ox.plot_graph(G, node_size=0)
+# make adjacency matrix
+nx_A = nx.to_numpy_matrix(g)
+np.savetxt(f'./data/{district_name}_shape/adjacency_matrix.csv', nx_A, delimiter=",")
 
-
-# ex_3 : get NY subway rail network
-district_name = 'NY subway rail'
-G = ox.graph_from_place('New York City, New York',
-                        retain_all=False, truncate_by_edge=True, simplify=True,
-                        custom_filter='["railway"~"subway"]')
-
-# osmnxUtils.get_data(G, district_name)
-fig, ax = ox.plot_graph(G, node_size=0, edge_color='w', edge_linewidth=0.2)
-
-"""

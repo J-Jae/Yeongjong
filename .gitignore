@@ -1,7 +1,8 @@
-.data/
-.vscode
+data/
+vscode
 .vscode/
 .my
+__pycache__/
 
 # Distribution / packaging
 .Python

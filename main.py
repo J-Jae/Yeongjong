@@ -1,39 +1,57 @@
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+from GenericAlgorithm import *
+import osmnx as ox
+import json
 
-district_name = 'simple'
+def save_dict_to_file(dic, district_name):
+    f = open(f'./data/{district_name}_result.txt','w')
+    f.write(str(dic))
+    f.close()
 
-shp_node_path = f'./data/{district_name}_shape/nodes.shp'
-shp_edge_path = f'./data/{district_name}_shape/edges.shp'
+"""
+Settings
+"""
+district_name = 'simple_drone'
+"""
+Settings
+"""
 
-nodes = gpd.read_file(shp_node_path)
-edges = gpd.read_file(shp_edge_path)
-# edges = gpd.read_file(shp_edge_path, encoding='euc-kr')
-# edges = gpd.read_file(shp_edge_path, encoding='euc-kr')
+path = f'./data/{district_name}_matrix'
+ga = GenericAlgorithm(path, generations=500, population_size=300, alpha=3)
+result = ga.run()
 
-# shp_node = shp_node[shp_node['NODE_ID'].str[0:3] == '161']
-# shp_link = shp_link[shp_link['LINK_ID'].str[0:3] == '161']
+# get Graph from graphml
+g = ox.load_graphml(f'./data/{district_name}.xml')
+g = nx.to_undirected(g)
 
-# Change column name to draw network in Gephi
-# shp_node.rename(columns={'NODE_ID': 'Id'}, inplace=True)
-# shp_link.rename(columns={'F_NODE': 'Source', 'T_NODE': 'Target'}, inplace=True)
+# save result
+save_dict_to_file(result, district_name)
+
+# convert index to node_id
+route = []
+route.append(result['route'][0][0])
+for edge in result['route']:
+    route.append(edge[1])
+
+# route
+nodes = list(g.nodes.data())
+for i in range(len(route)):
+    route[i] = nodes[route[i]][0]
+
+# plot and save result
+# fig, ax = ox.plot_graph_route(g, route, orig_dest_size=0, node_size=0)
+path = f'./data/{district_name}_result.svg'
+fig, ax = ox.plot_graph_route(g, route, orig_dest_size=0, node_size=0, save=True, filepath=path)
 
 
-print(nodes.head())
-print(edges.head())
+'''
+g = ox.load_graphml(f'./data/{district_name}_drone.xml')
+g2 = nx.to_undirected(g)
 
-g = nx.Graph()
+fig, ax = ox.plot_graph(g2, node_color='r')
+'''
 
-for idx, row in nodes.iterrows():
-    # add node to Graph G
-    g.add_node(row['osmid'], Label=row['osmid'],
-               latitude=row['y'], longitude=row['x'])
 
-for idx, row in edges.iterrows():
-    g.add_edge(row['from'], row['to'], weight=row['length'])
-
-# make adjacency matrix
-nx_A = nx.to_numpy_matrix(g)
-np.savetxt(f'./data/{district_name}_shape/adjacency_matrix.csv', nx_A, delimiter=",")
 
